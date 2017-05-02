@@ -11,6 +11,7 @@ static const unsigned PIN_POT[] = {A0,A1,A2,A3,A4,A5}; // Uno max 6 inputs, Nano
 uint8_t CC_Val[] = {0,0,0,0,0,0};
 uint8_t CC_ValOld[] = {0,0,0,0,0,0};
 uint8_t PotVal[] = {0,0,0,0,0,0};
+uint8_t i = 0;
 
 //MIDI_CREATE_DEFAULT_INSTANCE();
 MIDI_CREATE_INSTANCE(SoftwareSerial, MIDIserial, MIDI);
@@ -24,5 +25,14 @@ void setup() {
 }
 
 void loop() {
+  for (i=0; i<CC_COUNT; i++) {
+    PotVal[i] = analogRead(PIN_POT[i]);
+    CC_Val[i] = map(PotVal[i],0,1023,0,127);
+    if (CC_Val[i] != CC_ValOld[i]) {
+      USBserial.print("PotVal: ");USBserial.println(PotVal[i]);
+      USBserial.print("CC_Val: ");USBserial.println(CC_Val[i]);
+      CC_ValOld[i] = CC_Val[i];
+    }
+  }
 
 }
