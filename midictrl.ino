@@ -1,7 +1,8 @@
-#include <MIDI.h>
-#include <SoftwareSerial.h>
-#define USBserial Serial
-SoftwareSerial MIDIserial(0, 1); // RX, TX
+//#include <MIDI.h>
+#include <MIDIUSB.h>
+//#include <SoftwareSerial.h>
+//#define USBserial Serial
+//SoftwareSerial MIDIserial(0, 1); // RX, TX
 
 static const unsigned MIDI_CH = 1; //configure MIDI channel here
 static const unsigned CC_COUNT = 8; // configure how many knobs here
@@ -22,14 +23,19 @@ bool QuickMode[] = {false,false,false,false,false,false,false,false};
 int x = 0;
 
 //MIDI_CREATE_DEFAULT_INSTANCE();
-MIDI_CREATE_INSTANCE(SoftwareSerial, MIDIserial, MIDI);
+//MIDI_CREATE_INSTANCE(SoftwareSerial, MIDIserial, MIDI);
+
+void controlChange(byte channel, byte control, byte value) {
+  midiEventPacket_t event = {0x0B, 0xB0 | channel, control, value};
+  MidiUSB.sendMIDI(event);
+}
 
 void setup() {
   pinMode(PIN_LED_INT, OUTPUT);
-  MIDI.begin(MIDI_CH); // Launch MIDI and set to channel 1
-  while(!USBserial); // wait until USBserial is accessible 
-  USBserial.begin(115200); // DEBUG here
-  USBserial.println("Arduino midictrl ready");
+  //MIDI.begin(MIDI_CH); // Launch MIDI and set to channel 1
+  //while(!USBserial); // wait until USBserial is accessible 
+  //USBserial.begin(115200); // DEBUG here
+  //USBserial.println("Arduino midictrl ready");
 }
 
 void loop() {
@@ -62,7 +68,7 @@ void loop() {
       USBserial.print("x: ");USBserial.println(x[i]);
       USBserial.print("CC_Val: ");USBserial.println(CC_Val[i]);
     */
-      USBserial.print("\t");
+     /*USBserial.print("\t");
       USBserial.print(PotVal[i]);
       USBserial.print("\t");
       USBserial.print(PotSmoothVal[i]);
@@ -76,7 +82,9 @@ void loop() {
       USBserial.print(x);
       USBserial.print("\t");
       USBserial.println(CC_Val[i]);
-      MIDI.sendControlChange(CC_NUM[i], CC_Val[i], MIDI_CH);
+     */
+      //MIDI.sendControlChange(CC_NUM[i], CC_Val[i], MIDI_CH);
+      ControlChange(MIDI_CH, CC_NUM[i], CC_Val[i]);
       CC_ValOld[i] = CC_Val[i];
       PotValOld[i] = PotVal[i];
     }
