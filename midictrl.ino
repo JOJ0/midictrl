@@ -5,6 +5,7 @@ static const unsigned CC_COUNT = 8; // configure how many knobs here
 static const unsigned CC_NUM[] = {81,82,83,84,85,86,87,88}; // configure MIDI CC numbers here
 static const unsigned PIN_LED_INT = 13;
 static const unsigned PIN_POT[] = {A0,A1,A2,A3,A4,A5,A6,A7}; // Uno max 6 inputs, Nano max 8
+//static const unsigned PIN_SW_BANK = A8; // FIXME not enough inputs available, handle Pots with 4051 IC
 uint8_t CC_Val[] = {0,0,0,0,0,0,0,0};
 uint8_t CC_ValOld[] = {0,0,0,0,0,0,0,0};
 uint16_t PotVal[] = {0,0,0,0,0,0,0,0};
@@ -20,8 +21,10 @@ int x = 0;
 
 void setup() {
   pinMode(PIN_LED_INT, OUTPUT);
+  //pinMode(PIN_SW_BANK, INPUT_PULLUP);
   while(!USBserial); // wait until USBserial is accessible 
-  USBserial.begin(9600); // common serial rate -> hairless midi bridge
+  //USBserial.begin(9600); // common serial rate -> hairless midi bridge
+  USBserial.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
 }
 
 void loop() {
