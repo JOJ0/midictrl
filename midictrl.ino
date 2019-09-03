@@ -2,6 +2,7 @@
 #define Srl Serial
 #define p Serial.print
 #define pln Serial.println
+//#define debug // comment out for debugging
 
 static const unsigned MIDI_CMD = 176; // 176 = CC on channel 1
 static const unsigned CC_COUNT = 8; // configure how many knobs here
@@ -26,8 +27,11 @@ void setup() {
   pinMode(PIN_LED_INT, OUTPUT);
   //pinMode(PIN_SW_BANK, INPUT_PULLUP);
   while(!Srl); // wait until Serial is accessible
-  Srl.begin(9600); // common serial rate -> hairless midi bridge
-  //Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
+  #ifdef debug
+      Srl.begin(9600); // common serial rate -> hairless midi bridge or debugging
+  #else
+      Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
+  #endif
 }
 
 void loop() {
@@ -53,26 +57,30 @@ void loop() {
     CC_Val[i] = map(PotQuickSmoothVal[i],0,1023,0,127);
     if (CC_Val[i] != CC_ValOld[i]) {
     //if (PotVal[i] != PotValOld[i]) { // DEBUG START
-        p("\t");
-        p(PotVal[i]);
-        p("\t");
-        p(PotSmoothVal[i]);
-        p("\t");
-        p(PotValDiff[i]);
-        p("\t");
-        p(PotQuickSmoothVal[i]);
-        p("\t");
-        p(QuickMode[i]);
-        p("\t");
-        p(x);
-        p("\t");
-        pln(CC_Val[i]); // DEBUG END
 
-      //Srl.write(MIDI_CMD);
-      //Srl.write(CC_NUM[i]);
-      //Srl.write(CC_Val[i]);
-      CC_ValOld[i] = CC_Val[i];
-      PotValOld[i] = PotVal[i];
+        #ifdef debug
+            p("\tPotVal,SmoothVal,Diff: ");
+            p(PotVal[i]);
+            p("\t");
+            p(PotSmoothVal[i]);
+            p("\t");
+            p(PotValDiff[i]);
+            p("\tQuSmVal: ");
+            p(PotQuickSmoothVal[i]);
+            p("\tQuick: ");
+            p(QuickMode[i]);
+            p("\tx: ");
+            p(x);
+            p("\tCC: ");
+            pln(CC_Val[i]); // DEBUG END
+        #else
+            Srl.write(MIDI_CMD);
+            Srl.write(CC_NUM[i]);
+            Srl.write(CC_Val[i]);
+        #endif
+
+        CC_ValOld[i] = CC_Val[i];
+        PotValOld[i] = PotVal[i];
     }
   }
 
