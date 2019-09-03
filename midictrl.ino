@@ -1,4 +1,7 @@
-#define USBserial Serial
+#include <advancedSerial.h>
+#define Srl Serial
+#define p Serial.print
+#define pln Serial.println
 
 static const unsigned MIDI_CMD = 176; // 176 = CC on channel 1
 static const unsigned CC_COUNT = 8; // configure how many knobs here
@@ -22,9 +25,9 @@ int x = 0;
 void setup() {
   pinMode(PIN_LED_INT, OUTPUT);
   //pinMode(PIN_SW_BANK, INPUT_PULLUP);
-  while(!USBserial); // wait until USBserial is accessible 
-  //USBserial.begin(9600); // common serial rate -> hairless midi bridge
-  USBserial.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
+  while(!Srl); // wait until Serial is accessible
+  Srl.begin(9600); // common serial rate -> hairless midi bridge
+  //Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
 }
 
 void loop() {
@@ -50,24 +53,24 @@ void loop() {
     CC_Val[i] = map(PotQuickSmoothVal[i],0,1023,0,127);
     if (CC_Val[i] != CC_ValOld[i]) {
     //if (PotVal[i] != PotValOld[i]) { // DEBUG START
-    /*USBserial.print("\t");
-      USBserial.print(PotVal[i]);
-      USBserial.print("\t");
-      USBserial.print(PotSmoothVal[i]);
-      USBserial.print("\t");
-      USBserial.print(PotValDiff[i]);
-      USBserial.print("\t");
-      USBserial.print(PotQuickSmoothVal[i]);
-      USBserial.print("\t");
-      USBserial.print(QuickMode[i]);
-      USBserial.print("\t");
-      USBserial.print(x);
-      USBserial.print("\t");
-      USBserial.println(CC_Val[i]); // DEBUG END
-     */
-      USBserial.write(MIDI_CMD);
-      USBserial.write(CC_NUM[i]);
-      USBserial.write(CC_Val[i]);
+        p("\t");
+        p(PotVal[i]);
+        p("\t");
+        p(PotSmoothVal[i]);
+        p("\t");
+        p(PotValDiff[i]);
+        p("\t");
+        p(PotQuickSmoothVal[i]);
+        p("\t");
+        p(QuickMode[i]);
+        p("\t");
+        p(x);
+        p("\t");
+        pln(CC_Val[i]); // DEBUG END
+
+      //Srl.write(MIDI_CMD);
+      //Srl.write(CC_NUM[i]);
+      //Srl.write(CC_Val[i]);
       CC_ValOld[i] = CC_Val[i];
       PotValOld[i] = PotVal[i];
     }
