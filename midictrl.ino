@@ -4,17 +4,17 @@
 #define pln Serial.println
 //#define debug // comment out for debugging
 
-static const unsigned MIDI_CMD = 176; // 176 = CC on channel 1
-static const unsigned CC_COUNT = 8; // configure how many knobs here
-static const unsigned CC_NUM[] = {81,82,83,84,85,86,87,88}; // configure MIDI CC numbers here
-static const unsigned PIN_LED_INT = 13;
-static const unsigned PIN_POT[] = {A0,A1,A2,A3,A4,A5,A6,A7}; // Uno max 6 inputs, Nano max 8
+const int MIDI_CMD = 176; // 176 = CC on channel 1
+const int CC_COUNT = 8; // configure how many knobs here
+const int CC_NUM[] = {81,82,83,84,85,86,87,88}; // configure MIDI CC numbers here
+const int PIN_LED_INT = 13;
+const int PIN_POT[] = {A0,A1,A2,A3,A4,A5,A6,A7}; // Uno max 6 inputs, Nano max 8
 //static const unsigned PIN_SW_BANK = 2; // use any digital port for switch bank feature
-uint8_t CC_Val[] = {0,0,0,0,0,0,0,0};
-uint8_t CC_ValOld[] = {0,0,0,0,0,0,0,0};
+int CC_Val[] = {0,0,0,0,0,0,0,0};
+int CC_ValOld[] = {0,0,0,0,0,0,0,0};
 uint16_t PotVal[] = {0,0,0,0,0,0,0,0};
 uint16_t PotValOld[] = {0,0,0,0,0,0,0,0};
-uint8_t i = 8;
+int i = 8;
 // smoothing
 int PotSmoothVal[] = {0,0,0,0,0,0,0,0};
 int PotQuickSmoothVal[] = {0,0,0,0,0,0,0,0};
@@ -22,6 +22,14 @@ int PotValDiff[] = {0,0,0,0,0,0,0,0};
 bool QuickMode[] = {false,false,false,false,false,false,false,false};
 //int x[] = {0,0,0,0,0,0,0,0};
 int x = 0;
+// smoothing refactor
+const int numReadings = 10;
+
+int readings[CC_COUNT][numReadings];         // the readings from the analog input
+int readIndex[CC_COUNT] = {0,0,0,0,0,0,0,0}; // the index of the current reading
+int total[CC_COUNT] = {0,0,0,0,0,0,0,0};     // the running total
+int average[CC_COUNT] = {0,0,0,0,0,0,0,0};   // the average
+
 
 void setup() {
   pinMode(PIN_LED_INT, OUTPUT);
@@ -32,55 +40,60 @@ void setup() {
   #else
       Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
   #endif
+  // initialize all the pots readings to 0:
+  for (int potNo = 0; potNo < CC_COUNT; potNo++) {
+      //p("outer loop potNo: "); pln(potNo);
+      for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+          readings[potNo][thisReading] = 0;
+          //p("inner loop: "); pln(readings[potNo][thisReading]);
+      }
+  }
 }
 
 void loop() {
-  for (i=0; i<CC_COUNT; i++) {
+  for (int i=0; i < CC_COUNT; i++) {
+    #ifdef debug
     PotVal[i] = analogRead(PIN_POT[i]);
-    PotSmoothVal[i] = 0.6 * PotSmoothVal[i] + 0.4 * PotVal[i];
-    PotValDiff[i] = abs(PotVal[i] - PotValOld[i]);
-    if (PotValDiff[i] <= 5 && QuickMode[i] == false) {
-      PotQuickSmoothVal[i] = 0.6 * PotSmoothVal[i] + 0.4 * PotVal[i];
+    #endif
+
+    total[i] = total[i] - readings[i][readIndex[i]];
+    readings[i][readIndex[i]] = analogRead(PIN_POT[i]);
+    //readings[i][readIndex[i]] = 1;
+    total[i] = total[i] + readings[i][readIndex[i]];
+    readIndex[i]++;
+    if (readIndex[i] >= numReadings) {
+        readIndex[i] = 0;
     }
-    else if (PotValDiff[i] <= 5 && QuickMode[i] == true){
-      PotQuickSmoothVal[i] = PotVal[i];
-      x++;
-    }
-    else {
-      PotQuickSmoothVal[i] = PotVal[i];
-      QuickMode[i] = true;
-    }
-    if (x >= 10) {
-      x = 0;
-      QuickMode[i] = false;
-    }
-    CC_Val[i] = map(PotQuickSmoothVal[i],0,1023,0,127);
+    average[i] = total[i] / numReadings;
+
+    CC_Val[i] = map(average[i],0,1023,0,127);
+    #ifdef debug
+    if (PotVal[i] != PotValOld[i]) {
+    #else
     if (CC_Val[i] != CC_ValOld[i]) {
-    //if (PotVal[i] != PotValOld[i]) { // DEBUG START
+    #endif
 
         #ifdef debug
-            p("\tPotVal,SmoothVal,Diff: ");
-            p(PotVal[i]);
-            p("\t");
-            p(PotSmoothVal[i]);
-            p("\t");
-            p(PotValDiff[i]);
-            p("\tQuSmVal: ");
-            p(PotQuickSmoothVal[i]);
-            p("\tQuick: ");
-            p(QuickMode[i]);
-            p("\tx: ");
-            p(x);
-            p("\tCC: ");
-            pln(CC_Val[i]); // DEBUG END
+        p("\tPotVal,PotAverage,CC_num,CC_val: ");
+        p(PotVal[i]);
+        p("\t");
+        p(average[i]);
+        p("\t");
+        p(CC_NUM[i]);
+        p("\t");
+        pln(CC_Val[i]); // DEBUG END
         #else
-            Srl.write(MIDI_CMD);
-            Srl.write(CC_NUM[i]);
-            Srl.write(CC_Val[i]);
+        Srl.write(MIDI_CMD);
+        Srl.write(CC_NUM[i]);
+        Srl.write(CC_Val[i]);
         #endif
 
-        CC_ValOld[i] = CC_Val[i];
+        #ifdef debug
         PotValOld[i] = PotVal[i];
+        #else
+        CC_ValOld[i] = CC_Val[i];
+        #endif
+
     }
   }
 
