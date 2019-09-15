@@ -9,22 +9,12 @@ const int CC_COUNT = 8; // configure how many knobs here
 const int CC_NUM[] = {81,82,83,84,85,86,87,88}; // configure MIDI CC numbers here
 const int PIN_LED_INT = 13;
 const int PIN_POT[] = {A0,A1,A2,A3,A4,A5,A6,A7}; // Uno max 6 inputs, Nano max 8
-//static const unsigned PIN_SW_BANK = 2; // use any digital port for switch bank feature
 int CC_Val[] = {0,0,0,0,0,0,0,0};
 int CC_ValOld[] = {0,0,0,0,0,0,0,0};
 uint16_t PotVal[] = {0,0,0,0,0,0,0,0};
 uint16_t PotValOld[] = {0,0,0,0,0,0,0,0};
-int i = 8;
-// smoothing
-int PotSmoothVal[] = {0,0,0,0,0,0,0,0};
-int PotQuickSmoothVal[] = {0,0,0,0,0,0,0,0};
-int PotValDiff[] = {0,0,0,0,0,0,0,0};
-bool QuickMode[] = {false,false,false,false,false,false,false,false};
-//int x[] = {0,0,0,0,0,0,0,0};
-int x = 0;
 // smoothing refactor
 const int numReadings = 10;
-
 int readings[CC_COUNT][numReadings];         // the readings from the analog input
 int readIndex[CC_COUNT] = {0,0,0,0,0,0,0,0}; // the index of the current reading
 int total[CC_COUNT] = {0,0,0,0,0,0,0,0};     // the running total
@@ -58,7 +48,6 @@ void loop() {
 
     total[i] = total[i] - readings[i][readIndex[i]];
     readings[i][readIndex[i]] = analogRead(PIN_POT[i]);
-    //readings[i][readIndex[i]] = 1;
     total[i] = total[i] + readings[i][readIndex[i]];
     readIndex[i]++;
     if (readIndex[i] >= numReadings) {
@@ -81,7 +70,7 @@ void loop() {
         p("\t");
         p(CC_NUM[i]);
         p("\t");
-        pln(CC_Val[i]); // DEBUG END
+        pln(CC_Val[i]);
         #else
         Srl.write(MIDI_CMD);
         Srl.write(CC_NUM[i]);
