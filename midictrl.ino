@@ -22,7 +22,8 @@ int readIndex[CC_COUNT] = {0,0,0,0,0,0,0,0}; // the index of the current reading
 int total[CC_COUNT] = {0,0,0,0,0,0,0,0};     // the running total
 int average[CC_COUNT] = {0,0,0,0,0,0,0,0};   // the average
 // smoothing refactor using Ewma library
-Ewma adcFilter1(1); // smooth val 0-1024
+//Ewma adcFilter1(1); // smooth val 0-1024
+Ewma adcFilter1(0.9); // smooth val 0-1024
 //Ewma adcFilter1(0.5); // smooth val 0-513
 //Ewma adcFilter1(0.1); // smooth val 0-179
 //Ewma adcFilter1(0.05); // smooth val 0-151
@@ -45,7 +46,8 @@ void loop() {
         PotVal[i] = analogRead(PIN_POT[i]);
         PotSmooth[i] =adcFilter1.filter(PotVal[i]);
 
-        CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
+        //CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
+        CC_Val[i] = map(PotSmooth[i],0,920.7,0,127);
         //CC_Val[i] = map(PotSmooth[i],0,513,0,127);
         //CC_Val[i] = map(PotSmooth[i],0,179,0,127);
         //CC_Val[i] = map(PotSmooth[i],0,155,0,127);
