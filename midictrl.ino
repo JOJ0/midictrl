@@ -22,68 +22,67 @@ int average[CC_COUNT] = {0,0,0,0,0,0,0,0};   // the average
 
 
 void setup() {
-  pinMode(PIN_LED_INT, OUTPUT);
-  //pinMode(PIN_SW_BANK, INPUT_PULLUP);
-  while(!Srl); // wait until Serial is accessible
-  #ifdef debug
-      Srl.begin(9600); // common serial rate -> hairless midi bridge or debugging
-  #else
-      Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
-  #endif
-  // initialize all the pots readings to 0:
-  for (int potNo = 0; potNo < CC_COUNT; potNo++) {
-      //p("outer loop potNo: "); pln(potNo);
-      for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-          readings[potNo][thisReading] = 0;
-          //p("inner loop: "); pln(readings[potNo][thisReading]);
-      }
-  }
+    pinMode(PIN_LED_INT, OUTPUT);
+    //pinMode(PIN_SW_BANK, INPUT_PULLUP);
+    while(!Srl); // wait until Serial is accessible
+    #ifdef debug
+        Srl.begin(9600); // common serial rate -> hairless midi bridge or debugging
+    #else
+        Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
+    #endif
+    // initialize all the pots readings to 0:
+    for (int potNo = 0; potNo < CC_COUNT; potNo++) {
+        //p("outer loop potNo: "); pln(potNo);
+        for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+            readings[potNo][thisReading] = 0;
+            //p("inner loop: "); pln(readings[potNo][thisReading]);
+        }
+    }
 }
 
 void loop() {
-  for (int i=0; i < CC_COUNT; i++) {
-    #ifdef debug
-    PotVal[i] = analogRead(PIN_POT[i]);
-    #endif
-
-    total[i] = total[i] - readings[i][readIndex[i]];
-    readings[i][readIndex[i]] = analogRead(PIN_POT[i]);
-    total[i] = total[i] + readings[i][readIndex[i]];
-    readIndex[i]++;
-    if (readIndex[i] >= numReadings) {
-        readIndex[i] = 0;
-    }
-    average[i] = total[i] / numReadings;
-
-    CC_Val[i] = map(average[i],0,1023,0,127);
-    #ifdef debug
-    if (PotVal[i] != PotValOld[i]) {
-    #else
-    if (CC_Val[i] != CC_ValOld[i]) {
-    #endif
-
+    for (int i=0; i < CC_COUNT; i++) {
         #ifdef debug
-        p("\tPotVal,PotAverage,CC_num,CC_val: ");
-        p(PotVal[i]);
-        p("\t");
-        p(average[i]);
-        p("\t");
-        p(CC_NUM[i]);
-        p("\t");
-        pln(CC_Val[i]);
-        #else
-        Srl.write(MIDI_CMD);
-        Srl.write(CC_NUM[i]);
-        Srl.write(CC_Val[i]);
+        PotVal[i] = analogRead(PIN_POT[i]);
         #endif
-
+  
+        total[i] = total[i] - readings[i][readIndex[i]];
+        readings[i][readIndex[i]] = analogRead(PIN_POT[i]);
+        total[i] = total[i] + readings[i][readIndex[i]];
+        readIndex[i]++;
+        if (readIndex[i] >= numReadings) {
+            readIndex[i] = 0;
+        }
+        average[i] = total[i] / numReadings;
+  
+        CC_Val[i] = map(average[i],0,1023,0,127);
         #ifdef debug
-        PotValOld[i] = PotVal[i];
+        if (PotVal[i] != PotValOld[i]) {
         #else
-        CC_ValOld[i] = CC_Val[i];
+        if (CC_Val[i] != CC_ValOld[i]) {
         #endif
-
+  
+            #ifdef debug
+            p("\tPotVal,PotAverage,CC_num,CC_val: ");
+            p(PotVal[i]);
+            p("\t");
+            p(average[i]);
+            p("\t");
+            p(CC_NUM[i]);
+            p("\t");
+            pln(CC_Val[i]);
+            #else
+            Srl.write(MIDI_CMD);
+            Srl.write(CC_NUM[i]);
+            Srl.write(CC_Val[i]);
+            #endif
+  
+            #ifdef debug
+            PotValOld[i] = PotVal[i];
+            #else
+            CC_ValOld[i] = CC_Val[i];
+            #endif
+  
+        }
     }
-  }
-
 }
