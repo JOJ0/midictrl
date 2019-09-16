@@ -3,7 +3,7 @@
 #define Srl Serial
 #define p Serial.print
 #define pln Serial.println
-#define debug // comment out for debugging
+//#define debug // comment out for debugging
 
 const int MIDI_CMD = 176; // 176 = CC on channel 1
 const int CC_COUNT = 8; // configure how many knobs here
@@ -50,9 +50,9 @@ void loop() {
         //CC_Val[i] = map(PotSmooth[i],0,155,0,127);
 
         //#ifdef debug
-        //if (PotVal[i] != PotValOld[i]) {
+        if (PotVal[i] != PotValOld[i]) {
         //#else
-        if (CC_Val[i] != CC_ValOld[i]) {
+        //if (CC_Val[i] != CC_ValOld[i]) {
         //#endif
 
             #ifdef debug
