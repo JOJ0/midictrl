@@ -40,42 +40,39 @@ void setup() {
 }
 
 void loop() {
-  for (int i=0; i < CC_COUNT; i++) {
-    PotVal[i] = analogRead(PIN_POT[i]);
-    PotSmooth[i] =adcFilter1.filter(PotVal[i]);
+    for (int i=0; i < CC_COUNT; i++) {
+        PotVal[i] = analogRead(PIN_POT[i]);
+        PotSmooth[i] =adcFilter1.filter(PotVal[i]);
 
-    //CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
-    CC_Val[i] = map(PotSmooth[i],0,513,0,127);
-    //CC_Val[i] = map(PotSmooth[i],0,179,0,127);
-    //CC_Val[i] = map(PotSmooth[i],0,155,0,127);
-    #ifdef debug
-    if (PotVal[i] != PotValOld[i]) {
-    #else
-    if (CC_Val[i] != CC_ValOld[i]) {
-    #endif
+        //CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
+        CC_Val[i] = map(PotSmooth[i],0,513,0,127);
+        //CC_Val[i] = map(PotSmooth[i],0,179,0,127);
+        //CC_Val[i] = map(PotSmooth[i],0,155,0,127);
 
-        #ifdef debug
-        p("\tPotVal,PotSmooth,CC_num,CC_val: ");
-        p(PotVal[i]);
-        p("\t");
-        p(PotSmooth[i]);
-        p("\t");
-        p(CC_NUM[i]);
-        p("\t");
-        pln(CC_Val[i]);
-        #else
-        Srl.write(MIDI_CMD);
-        Srl.write(CC_NUM[i]);
-        Srl.write(CC_Val[i]);
-        #endif
+        //#ifdef debug
+        //if (PotVal[i] != PotValOld[i]) {
+        //#else
+        if (CC_Val[i] != CC_ValOld[i]) {
+        //#endif
 
-        #ifdef debug
+            #ifdef debug
+            p("\tPotVal,PotSmooth,CC_num,CC_val: ");
+            p(PotVal[i]);
+            p("\t");
+            p(PotSmooth[i]);
+            p("\t");
+            p(CC_NUM[i]);
+            p("\t");
+            pln(CC_Val[i]);
+            #else
+            Srl.write(MIDI_CMD);
+            Srl.write(CC_NUM[i]);
+            Srl.write(CC_Val[i]);
+            #endif
+
+        }
         PotValOld[i] = PotVal[i];
-        #else
         CC_ValOld[i] = CC_Val[i];
-        #endif
-
     }
-  }
 
 }
