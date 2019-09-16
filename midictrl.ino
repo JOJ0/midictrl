@@ -1,8 +1,9 @@
 #include <advancedSerial.h>
+#include <Ewma.h>
 #define Srl Serial
 #define p Serial.print
 #define pln Serial.println
-//#define debug // comment out for debugging
+#define debug // comment out for debugging
 
 const int MIDI_CMD = 176; // 176 = CC on channel 1
 const int CC_COUNT = 8; // configure how many knobs here
@@ -15,10 +16,16 @@ uint16_t PotVal[] = {0,0,0,0,0,0,0,0};
 uint16_t PotValOld[] = {0,0,0,0,0,0,0,0};
 // smoothing refactor
 const int numReadings = 10;
-int readings[CC_COUNT][numReadings];         // the readings from the analog input
+int PotSmooth[CC_COUNT] = {0,0,0,0,0,0,0,0};         // the readings from the analog input
 int readIndex[CC_COUNT] = {0,0,0,0,0,0,0,0}; // the index of the current reading
 int total[CC_COUNT] = {0,0,0,0,0,0,0,0};     // the running total
 int average[CC_COUNT] = {0,0,0,0,0,0,0,0};   // the average
+// smoothing refactor using Ewma library
+//Ewma adcFilter1(1); // smooth val 0-1024
+Ewma adcFilter1(0.5); // smooth val 0-513
+//Ewma adcFilter1(0.1); // smooth val 0-179
+//Ewma adcFilter1(0.05); // smooth val 0-151
+//Ewma adcFilter1(0.01); // smooth val 0-132
 
 
 void setup() {
@@ -30,32 +37,17 @@ void setup() {
   #else
       Srl.begin(31250); // MIDI serial rate -> cheap USB MIDI cable hack
   #endif
-  // initialize all the pots readings to 0:
-  for (int potNo = 0; potNo < CC_COUNT; potNo++) {
-      //p("outer loop potNo: "); pln(potNo);
-      for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-          readings[potNo][thisReading] = 0;
-          //p("inner loop: "); pln(readings[potNo][thisReading]);
-      }
-  }
 }
 
 void loop() {
   for (int i=0; i < CC_COUNT; i++) {
-    #ifdef debug
     PotVal[i] = analogRead(PIN_POT[i]);
-    #endif
+    PotSmooth[i] =adcFilter1.filter(PotVal[i]);
 
-    total[i] = total[i] - readings[i][readIndex[i]];
-    readings[i][readIndex[i]] = analogRead(PIN_POT[i]);
-    total[i] = total[i] + readings[i][readIndex[i]];
-    readIndex[i]++;
-    if (readIndex[i] >= numReadings) {
-        readIndex[i] = 0;
-    }
-    average[i] = total[i] / numReadings;
-
-    CC_Val[i] = map(average[i],0,1023,0,127);
+    //CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
+    CC_Val[i] = map(PotSmooth[i],0,513,0,127);
+    //CC_Val[i] = map(PotSmooth[i],0,179,0,127);
+    //CC_Val[i] = map(PotSmooth[i],0,155,0,127);
     #ifdef debug
     if (PotVal[i] != PotValOld[i]) {
     #else
@@ -63,10 +55,10 @@ void loop() {
     #endif
 
         #ifdef debug
-        p("\tPotVal,PotAverage,CC_num,CC_val: ");
+        p("\tPotVal,PotSmooth,CC_num,CC_val: ");
         p(PotVal[i]);
         p("\t");
-        p(average[i]);
+        p(PotSmooth[i]);
         p("\t");
         p(CC_NUM[i]);
         p("\t");
