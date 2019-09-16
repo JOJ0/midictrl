@@ -16,13 +16,14 @@ uint16_t PotVal[] = {0,0,0,0,0,0,0,0};
 uint16_t PotValOld[] = {0,0,0,0,0,0,0,0};
 // smoothing refactor
 const int numReadings = 10;
-int PotSmooth[CC_COUNT] = {0,0,0,0,0,0,0,0};         // the readings from the analog input
+//int PotSmooth[CC_COUNT] = {0,0,0,0,0,0,0,0};         // the readings from the analog input
+float PotSmooth[CC_COUNT] = {0,0,0,0,0,0,0,0};         // the readings from the analog input
 int readIndex[CC_COUNT] = {0,0,0,0,0,0,0,0}; // the index of the current reading
 int total[CC_COUNT] = {0,0,0,0,0,0,0,0};     // the running total
 int average[CC_COUNT] = {0,0,0,0,0,0,0,0};   // the average
 // smoothing refactor using Ewma library
-//Ewma adcFilter1(1); // smooth val 0-1024
-Ewma adcFilter1(0.5); // smooth val 0-513
+Ewma adcFilter1(1); // smooth val 0-1024
+//Ewma adcFilter1(0.5); // smooth val 0-513
 //Ewma adcFilter1(0.1); // smooth val 0-179
 //Ewma adcFilter1(0.05); // smooth val 0-151
 //Ewma adcFilter1(0.01); // smooth val 0-132
@@ -44,16 +45,16 @@ void loop() {
         PotVal[i] = analogRead(PIN_POT[i]);
         PotSmooth[i] =adcFilter1.filter(PotVal[i]);
 
-        //CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
-        CC_Val[i] = map(PotSmooth[i],0,513,0,127);
+        CC_Val[i] = map(PotSmooth[i],0,1023,0,127);
+        //CC_Val[i] = map(PotSmooth[i],0,513,0,127);
         //CC_Val[i] = map(PotSmooth[i],0,179,0,127);
         //CC_Val[i] = map(PotSmooth[i],0,155,0,127);
 
-        //#ifdef debug
+        #ifdef debug
         if (PotVal[i] != PotValOld[i]) {
-        //#else
-        //if (CC_Val[i] != CC_ValOld[i]) {
-        //#endif
+        #else
+        if (CC_Val[i] != CC_ValOld[i]) {
+        #endif
 
             #ifdef debug
             p("\tPotVal,PotSmooth,CC_num,CC_val: ");
